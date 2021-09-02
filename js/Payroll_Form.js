@@ -1,48 +1,155 @@
-const salary = document.querySelector('#salary')
-const output = document.querySelector('.salary-output')
-output.textContent = salary.value;
-salary.addEventListener('input', function ()
-{
-       output.textContent = salary.value
+window.addEventListener( 'DOMContentLoaded', (event) => {
+	
+	const text = document.querySelector('#name')
+	const textError = document.querySelector('.text-error')
+	text.addEventListener('input',function ()
+	{   
+		if(text.value.length == 0)
+		{
+			textError.textContent = "";
+			return;
+		}
+		try
+		{
+			(new EmployeePayrollData()).name = text.value;
+			textError.textContent = "";
+		}
+		catch (e)
+		{
+			textError.textContent = e;
+		}
+	});
+
+	const salary = document.querySelector('#salary');
+	const output = document.querySelector('.salary-output');
+	output.textContent = salary.value;
+	salary.addEventListener('input', function ()
+	{
+	   output.textContent = salary.value;
+	});
 });
 
-const text = document.querySelector('#name')
-const textError = document.querySelector('.text-error')
-text.addEventListener('input',function ()
-{   
-	let nameRegex = RegExp("^[A-Z]{1}[A-Za-z]{2,}$")
-	if (nameRegex.test(text.value))
+const save = () =>
+{
+	try
 	{
-		textError.textContent = ""
+		let employeePayrollData = createEmployeePayroll();
+		createAndUpdateStrorage(employeePayrollData);
+	}
+	catch (e)
+	{
+		console.log(e);
+		return;
+	}
+}
+
+function createAndUpdateStrorage(employeePayrollData)
+{
+	let employeePayrollList = JSON.parse(localStorage.getItem("EmployeePayrollList"));
+
+	if(employeePayrollList != undefined)
+	{
+		employeePayrollList.push(employeePayrollData);
 	}
 	else
 	{
-		textError.textContent = "Name is Incorrect"
-	} 
-});
-
-document.getElementById("reset").onclick = function ()
-{
-    document.getElementById("emp-form-html").reset();
-	alert("Form has been reseted.");
+		employeePayrollList = [employeePayrollData];
+	}
+	alert(employeePayrollList.toString());
+	localStorage.setItem("EmployeePayrollList",JSON.stringify(employeePayrollList));
 }
 
-document.getElementById("submitButton").onclick = function () 
+const createEmployeePayroll = () =>
 {
-    try
+	let employeePayrollData = new EmployeePayrollData();
+	try
 	{
-	let name = document.getElementById("name").value;
-    let picture = document.querySelector('input[name = profile]:checked').value;
-    let gender = document.querySelector('input[name = gender]:checked').value;
-    let department = document.querySelector('input[name = department]:checked').value;
-    let salary = document.getElementById("salary").value;
-    let startDate = new Date(parseInt(document.getElementById("year").value), parseInt(document.getElementById("month").value), parseInt(document.getElementById("day").value));
-	let notes = document.getElementById("notes").value;
-	let employee = new EmployeeInfo("name","picture","gender","department","salary","startDate","notes");
-	alert(employee.toString());
+		employeePayrollData.name = getInputValueById('#name');
 	}
-	catch(error)
+	catch (e)
 	{
-		alert(error);
+		setTextValue('.text-error', e);
+		throw e;
 	}
-};
+	employeePayrollData.profilePic = getSelectedValues('[name=profile]').pop();
+	employeePayrollData.gender = getSelectedValues('[name=gender]').pop();
+	employeePayrollData.department = getSelectedValues('[name=department]');
+	employeePayrollData.salary = getInputValueById('#salary');
+	employeePayrollData.note = getInputValueById('#notes');
+	let date = getInputValueById('#day')+" "+getInputValueById('#month')+" "+getInputValueById('#year');
+	employeePayrollData.startDate = Date.parse(date);
+	alert(employeePayrollData.toString());
+	return employeePayrollData;
+}
+
+const getSelectedValues = (propertyValue) =>
+{
+	let allItems = document.querySelectorAll(propertyValue);
+	let selItems = [];
+	allItems.forEach(item => 
+		{
+			if(item.checked) selItems.push(item.value);
+		});
+		return selItems;
+}
+
+/*
+*	1: querySelector is the newer feature.
+*	2: The querySelector method can be used when selecting by element name,
+*		nestingm, or class name.
+*	3: querySelector lets you find elements with rules that can't be
+*		expressed with getElementById.
+*/
+
+const getInputValueById = (id) =>
+{
+	let value = document.querySelector(id).value;
+	return value;
+}
+
+/*
+* 1: getElementById is better supported than querySelector in older versions
+*	of the browsers.
+* 2: The things with getElementById is that it only allows to select an
+*	element by its id.
+*/
+
+const getInputElementValue = (id) =>
+{
+	let value = document.getElementById(id).value;
+	return value;
+}
+
+const resetForm = () =>
+{
+	setTextValue('#name','');
+	unsetSelectedValues('[name=profile]');
+	unsetSelectedValues('[name=gender]');
+	unsetSelectedValues('[name=department]');
+	setValue('#salary','');
+	setValue('#notes','');
+	setValue('#day','1');
+	setValue('#month','January');
+	setValue('#year','2020');
+}
+
+const unsetSelectedValues = (propertyValue) =>
+{
+	let allItems = document.querySelectorAll(propertyValue);
+	allItems.forEach(item =>
+		{
+			item.checked = false;
+		});
+}
+
+const setTextValue = (id, value) =>
+{
+	const element = document.querySelector(id);
+	element.textContent = value;
+}
+
+const setValue = (id, value) =>
+{
+	const element = document.querySelector(id);
+	element.value = value;
+}
